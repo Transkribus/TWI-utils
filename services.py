@@ -93,7 +93,7 @@ class TranskribusSession(object):
             t_log("COULD NOT CONNECT TO TRANSKRIBUS: %s" % (e), logging.WARN)
             return HttpResponse("Service Unavailable", status=503)
 
-
+        #t_log("URL : %s PARAMS : %s" % (url,params), logging.WARN)
         #Check responses,
         #	401: unauth
         #	403+rest+collId: forbidden collection
@@ -442,6 +442,10 @@ class TranskribusSession(object):
         t_transcript['key'] = t_transcript.get('tsId')
         return t_transcript
 
+    #I think that current_ts_md_for_page woudl be a better name for this one as it doesn't actually return the transcript....
+    def current_ts_md_for_page(self,request,collId, docId, page):
+        return self.current_transcript(request,collId, docId, page)
+
     def transcript(self,request,transcriptId,url):
 
         t_id = "transcript"
@@ -511,6 +515,7 @@ class TranskribusSession(object):
     def crowdsourcing_unsubscribe_handler(self,r,params=None):
         return r.status_code
 
+    #TODO find out why the save and status calls are not using t.request like everything else
     # Saves transcripts.
     def save_transcript(self, request, transcript_xml, collId, docId, page, parent):
         #added transcript id as parent as per Transkribus/TWI-edit#38
@@ -540,6 +545,15 @@ class TranskribusSession(object):
         print(r)
 
         return None
+
+    def fulltext_search(self, request, params=None) :
+        url = settings.TRP_URL+'search/fulltext'
+        t_id = "fulltext_search"
+        return self.request(request,t_id,url,params=params,ignore_cache=True)
+
+    def fulltext_search_handler(self,r,params=None):
+        return json.loads(r.text)
+
 
     ####################################
     # TODO decide what to do with this stuff (ie mets up/downloading, create_collection, etc)
