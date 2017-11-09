@@ -19,9 +19,7 @@ import logging
 
 import sys
 
-from .utils import t_log
-
-
+from .utils import get_ts_session, t_log
 
 ########################
 # override the login_required decorator, mostly so we can call services.t_collecctions
@@ -32,12 +30,12 @@ from .utils import t_log
 def t_login_required(function,redirect_field_name=REDIRECT_FIELD_NAME,login_url=None):
     @wraps(function)
     def wrapper(request, *args, **kw):
-        if request.user.is_authenticated():
 
+        if request.user.is_authenticated():
             #setting collections data as a session var if not already set
             #RM need to check if this is still strictly necesarry... probably not
             if "collections" not in request.session or request.session['collections'] is None:
-                t = request.user.tsdata.t
+                t = get_ts_session(request)
                 resp = t.collections(request)
                 if isinstance(resp,HttpResponse): return resp
 
@@ -76,11 +74,6 @@ def t_login_required_ajax(function,redirect_field_name=REDIRECT_FIELD_NAME,login
     def wrapper(request, *args, **kw):
         if request.user.is_authenticated():
 
-            #setting collections data as a session var if not already set
-#            if "collections" not in request.session or request.session['collections'] is None:
-#                resp = t_collections(request)
-#                if isinstance(resp,HttpResponse): return resp
-
             # We check here to see if we are still authenticated with transkribus
             # a quick post request to auth/refresh should do?
             # If we get 401/403 redirect to logout if not 200 raise exception
@@ -95,3 +88,4 @@ def t_login_required_ajax(function,redirect_field_name=REDIRECT_FIELD_NAME,login
             return HttpResponse('Unauthorized', status=401)
 
     return wrapper
+
