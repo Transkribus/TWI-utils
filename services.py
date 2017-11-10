@@ -71,7 +71,7 @@ class TranskribusSession(object):
 
     #Make a request for data (possibly) to the transkribus REST service make
     #use of helper functions and calling the appropriate data handler when done
-    def request(self,request,t_id,url,params=None,method=None,headers=None,handler_params=None,ignore_cache=None):
+    def request(self,request,t_id,url,params=None,method=None,headers=None,handler_params=None,ignore_cache=None,data=None):
 
         #Check for cached value and return that
         if ignore_cache is None :
@@ -86,7 +86,7 @@ class TranskribusSession(object):
         #Default method is GET
         try:
             if method == 'POST' :
-                r = self.s.post(url, params=params, verify=False, headers=headers)
+                r = self.s.post(url, params=params, verify=False, headers=headers, data=data)
             else:
                 r = self.s.get(url, params=params, verify=False, headers=headers)
         except requests.exceptions.ConnectionError as e:
@@ -462,7 +462,7 @@ class TranskribusSession(object):
         t_id = "transcript_xml"
         headers = {'content-type': 'application/xml'}
         params = {}
-        return self.request(request,t_id,url,params,headers,{'transcriptId': transcriptId})
+        return self.request(request,t_id,url,params,"GET",headers,{'transcriptId': transcriptId})
 
     def transcript_xml_handler(self,r,params=None):
         return r.text
@@ -523,12 +523,18 @@ class TranskribusSession(object):
         headers = {"content-type": "application/xml"}
 
         url = settings.TRP_URL+'collections/'+collId+'/'+str(docId)+'/'+str(page)+'/text'
-        r = self.s.post(url, verify=False, headers=headers, params=params, data=transcript_xml)
+        t_id = "save_transcript"
 
-        # Remove the old version from cache.
+        # Remove the old version from cache. NB better to do this after the request
         del request.session['current_transcript']
 
-        return None
+        return self.request(request, t_id, url, method="POST", params=params, headers=headers, data=transcript_xml)
+        #r = self.s.post(url, verify=False, headers=headers, params=params, data=transcript_xml)
+#        return None
+
+    def save_transcript_handler(self,r,params=None):
+        t_log("RESPONSE: %s " % r, logging.WARN)
+        return r.status_code
 
     def save_page_status(self, request, status, collId, docId, pageNr, transcriptId):
         params = {'status': status}
