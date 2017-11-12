@@ -72,7 +72,7 @@ class TranskribusSession(object):
     #Make a request for data (possibly) to the transkribus REST service make
     #use of helper functions and calling the appropriate data handler when done
     def request(self,request,t_id,url,params=None,method=None,headers=None,handler_params=None,ignore_cache=None,data=None):
-
+        #t_log("IN REQUEST t_id: %s  ignore cache: %s" % (t_id,ignore_cache),logging.WARN)
         #Check for cached value and return that
         if ignore_cache is None :
             cache_data = self.check_cache(request, t_id, url, params)
@@ -355,13 +355,13 @@ class TranskribusSession(object):
     def fulldoc_handler(self,r,params=None):
         return json.loads(r.text)
 
-    def document(self,request, collId, docId, nrOfTranscripts=None):
+    def document(self,request, collId, docId, nrOfTranscripts=None,ignore_cache=None):
         url = settings.TRP_URL+'collections/'+collId+'/'+str(docId)+'/fulldoc'
         t_id = "document"
         params = {}
         if not nrOfTranscripts is None:
             params['nrOfTranscripts'] = nrOfTranscripts
-        return self.request(request,t_id,url)
+        return self.request(request,t_id,url,ignore_cache=ignore_cache)
 
     def document_handler(self,r,params=None):
         t_doc = json.loads(r.text)
@@ -528,7 +528,7 @@ class TranskribusSession(object):
         # Remove the old version from cache. NB better to do this after the request
         del request.session['current_transcript']
 
-        return self.request(request, t_id, url, method="POST", params=params, headers=headers, data=transcript_xml)
+        return self.request(request, t_id, url, method="POST", params=params, headers=headers,ignore_cache=True, data=transcript_xml)
         #r = self.s.post(url, verify=False, headers=headers, params=params, data=transcript_xml)
 #        return None
 
@@ -540,17 +540,21 @@ class TranskribusSession(object):
         params = {'status': status}
         headers = {'content-type': 'text/plain'}
 
+        t_id = "save_page_status"
+
         url = settings.TRP_URL + 'collections/%(collId)s/%(docId)s/%(pageNr)s/%(transcriptId)s' % {
             'collId': collId,
             'docId': docId,
             'pageNr': pageNr,
             'transcriptId': transcriptId
         }
-        r = self.s.post(url, verify=False, headers=headers, params=params)
-        print(url)
-        print(r)
 
-        return None
+        return self.request(request, t_id, url, method="POST", params=params, headers=headers,ignore_cache=True)
+
+    def save_page_status_handler(self,r,params=None):
+        return r.status_code
+
+
 
     def fulltext_search(self, request, params=None) :
         url = settings.TRP_URL+'search/fulltext'
