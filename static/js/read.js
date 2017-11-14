@@ -16,8 +16,32 @@ console.log("SERVERBASE: ",serverbase);
 
 $(document).ready(function(){
 	$('#errorModal').modal({ show: false})
+    	var csrftoken = Cookies.get('csrftoken');
+
+	$.ajaxSetup({
+	    beforeSend: function(xhr, settings) {
+		if(!csrfSafeMethod(settings.type) && !this.crossDomain){
+		    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+		}
+	    }
+	});
+
+	$(".language_switcher").on("click", function(){	
+		$.post($(this).attr("href"), {language: $(this).data("language")}, function(data){
+			location.reload();
+		}).fail(function(xblah,textstatus,error){
+			console.log("LANG POST FAILED?", textstatus, error);
+		});
+		return false;
+	});
+
 
 });
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
 function make_url(url){
 //	appbase = appbase.replace(/\/$/,""); //remove trailing slash from appbase
 //	return appbase+url;
