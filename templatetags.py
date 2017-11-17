@@ -108,3 +108,7 @@ def opposite(mode):
         return 'view'
     return 'edit'
 
+@register.filter
+def get_interfaces(mode):
+    return settings.INTERFACES
+
