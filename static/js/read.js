@@ -75,7 +75,7 @@ function make_url(url){
 
 }
 
-function init_datatable(table,url, columns){
+function init_datatable(table, url, columns){
 	var datatable = table.DataTable({
 		"ordering": true,
 		"rowReorder": true,
