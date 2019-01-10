@@ -1,3 +1,5 @@
+#TWI-mc deprecated in favour fo https://github.com/Transkribus/web-app
+
 == app: read ==
 
 Utilities for Transkribus Web interface projects.
